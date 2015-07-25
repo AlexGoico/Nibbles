@@ -19,7 +19,7 @@ function init_globals() {
     // Bug: input ghosting through callback.
     // 2 noticable instances: Snake able to turn from right to left before a
     // frame is processed and on game reset snake default direction can be defeated.
-    document.addEventListener('keydown', process_inputs, false);
+    $(document).keydown(process_inputs);
 };
 
 /** Objects */
@@ -27,11 +27,13 @@ function Snake() {
     this.color = "green";
     this.dead = false;
     this.body = [];
+
     // Head of the snake is the last element of the body
-    for (i = 2; i != 6; i++)
-        this.body.push([2, i]);
+    for (var i = 0; i < 4; i++)
+        this.body.push([2, 2]);
 
     this.dir = "down";
+    this.nextDir = "";
 };
 
 Snake.prototype = {
@@ -53,6 +55,13 @@ Snake.prototype = {
             case "down":  headCopy[1] += 1; break;
             case "right": headCopy[0] += 1; break;
         }
+
+        // Consume last input if there is some input queued.
+        if (this.nextDir != "")
+        {
+            this.dir = this.nextDir;
+            this.nextDir = "";
+        }
     },
     paint: function() {
         headIndex = this.body.length - 1;
@@ -72,19 +81,22 @@ Snake.prototype = {
         var headX = this.body[this.body.length - 1][0];
         var headY = this.body[this.body.length - 1][1];
         if (headX < 0 || headX > CELLS_WIDE - 1 ||
-            headY < 0 || headY > CELLS_HIGH - 1)
+            headY < 0 || headY > CELLS_HIGH - 1) {
             this.dead = true;
+            return;
+        }
 
         // collided with itself
         // n - 1 checks for O(n) ineffiency, ugly array 2d global
         // collision array map is a possible O(1) solution
         for (var i = this.body.length-2; i >= 0; i--)
-            if (headX == this.body[i][0] && headY == this.body[i][1])
+            if (headX == this.body[i][0] && headY == this.body[i][1]) {
                 this.dead = true;
+                return;
+            }
 
         // collided with apple
-        if (headX == apple[0] && headY == apple[1])
-        {
+        if (headX == apple[0] && headY == apple[1]) {
             tail = this.body[0];
             tailCopy = [];
             tailCopy.push(tail[0]);
@@ -117,10 +129,10 @@ function report_globals () {
 
 function process_inputs(e) {
     switch (e.keyCode) {
-        case 38: if (player.dir != "down")  player.dir = "up";    break;
-        case 37: if (player.dir != "right") player.dir = "left";  break;
-        case 40: if (player.dir != "up")    player.dir = "down";  break;
-        case 39: if (player.dir != "left")  player.dir = "right"; break;
+        case 38: if (player.dir != "down")  player.nextDir = "up";    break;
+        case 37: if (player.dir != "right") player.nextDir = "left";  break;
+        case 40: if (player.dir != "up")    player.nextDir = "down";  break;
+        case 39: if (player.dir != "left")  player.nextDir = "right"; break;
     }
 }
 
@@ -134,14 +146,12 @@ function generate_apple() {
     apple = [Math.floor(Math.random() * CELLS_WIDE),
              Math.floor(Math.random() * CELLS_HIGH)];
     for (var i = 0; i < gameEntities.length; i++)
-    {
         if (gameEntities[i].overlaps(apple))
         {
             apple = [Math.floor(Math.random() * CELLS_WIDE),
                      Math.floor(Math.random() * CELLS_HIGH)];
             i = 0;
         }
-    }
     paint_apple();
 }
 
