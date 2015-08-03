@@ -98,13 +98,13 @@ Snake.prototype = {
             }
 
         // collided with apple
-        if (headX == apple[0] && headY == apple[1]) {
+        if (headX == apple.position[0] && headY == apple.position[1]) {
             tail = this.body[0];
             tailCopy = [tail[0], tail[1]];
             this.body.unshift(tailCopy);
             score.value++;
 
-            generate_apple();
+            apple.generate_apple();
         }
     },
 
@@ -114,6 +114,41 @@ Snake.prototype = {
                 this.body[i][1] == coord[1])
                 return true;
         return false;
+    }
+};
+
+function Apple() {
+    this.position = [];
+}
+
+Apple.prototype = {
+    /*
+     Collision based apple generatation.
+     Non-deterministic. With a fair random generator of uniform distribution
+     you will get a worse case of O(N) collisions, where N is the number of
+     occupied cells. Definitely better implementations.
+     */
+    generate_apple: function() {
+        this.position = [Math.floor(Math.random() * CELLS_WIDE),
+                         Math.floor(Math.random() * CELLS_HIGH)];
+
+        for (var i = 0; i < gameEntities.length; i++)
+        {
+            if (gameEntities[i].overlaps(this.position))
+            {
+                this.position = [Math.floor(Math.random() * CELLS_WIDE),
+                                 Math.floor(Math.random() * CELLS_HIGH)];
+                i = 0;
+            }
+        }
+        this.paint_apple();
+    },
+
+    paint_apple: function() {
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.position[0] * CELL_PIXEL_WIDTH,
+                     this.position[1] * CELL_PIXEL_HEIGHT,
+                     CELL_PIXEL_WIDTH, CELL_PIXEL_HEIGHT);
     }
 };
 
@@ -132,43 +167,15 @@ function process_inputs(e) {
         }
     }
 }
-
-/*
- Collision based apple generatation.
- Non-deterministic. With a fair random generator of uniform distribution
- you will get a worse case of O(N) collisions, where N is the number of
- occupied cells. Definitely better implementations.
- */
-function generate_apple() {
-    apple = [Math.floor(Math.random() * CELLS_WIDE),
-             Math.floor(Math.random() * CELLS_HIGH)];
-    for (var i = 0; i < gameEntities.length; i++)
-    {
-        if (gameEntities[i].overlaps(apple))
-        {
-            apple = [Math.floor(Math.random() * CELLS_WIDE),
-                     Math.floor(Math.random() * CELLS_HIGH)];
-            i = 0;
-        }
-    }
-    paint_apple();
-
-}
-
-function paint_apple() {
-    ctx.fillStyle = "red";
-    ctx.fillRect(apple[0] * CELL_PIXEL_WIDTH, apple[1] * CELL_PIXEL_HEIGHT,
-                 CELL_PIXEL_WIDTH, CELL_PIXEL_HEIGHT);
-}
-
 function main() {
     init_globals();
 
     player = new Snake();
+    apple  = new Apple();
     // For potential future gameEntities. Collisions can be check through an interface.
     gameEntities = [];
     gameEntities.push(player);
-    generate_apple();
+    apple.generate_apple();
 
     requestAnimationFrame(loop);
 };
@@ -187,15 +194,15 @@ function loop(cur) {
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    paint_apple();
+    apple.paint_apple();
     player.paint();
 
     if (!player.dead)
         requestAnimationFrame(loop);
     else
     {
-        player = new Snake();
         setTimeout(function() {
+            player = new Snake();
             loop();
             document.forms[0].reset();
         }, 2000);
