@@ -1,0 +1,6 @@
+Bug:
+ - Apple spawns in snake
+
+Enhancements:
+ - Apple seems feels biased on spawning close to edges
+ - Reported game blur, could be based on non-interpolated movement.

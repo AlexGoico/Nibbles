@@ -1,3 +1,7 @@
+/**
+ Array of entities implementation as opposed to a
+ collision sparse board.
+ */
 /** Globals */
 var canvas, ctx;
 var CELL_PIXEL_WIDTH, CELL_PIXEL_HEIGHT,
@@ -6,9 +10,9 @@ var score;
 var gameEntities, player, apple;
 
 function init_globals() {
-    canvas = document.getElementsByTagName("canvas")[0];
+    canvas = $("canvas")[0];
     ctx    = canvas.getContext("2d");
-    score  = document.getElementsByTagName("input")[0];
+    score  = $("input")[0];
 
     CELL_PIXEL_WIDTH = 20;
     CELL_PIXEL_HEIGHT = 20;
@@ -43,9 +47,7 @@ Snake.prototype = {
         this.body.shift();
         // Copy head
         head = this.body[this.body.length-1];
-        headCopy = [];
-        headCopy.push(head[0]);
-        headCopy.push(head[1]);
+        headCopy = [head[0], head[1]];
         // Push copy as new head
         this.body.push(headCopy);
         // Update new head
@@ -98,9 +100,7 @@ Snake.prototype = {
         // collided with apple
         if (headX == apple[0] && headY == apple[1]) {
             tail = this.body[0];
-            tailCopy = [];
-            tailCopy.push(tail[0]);
-            tailCopy.push(tail[1]);
+            tailCopy = [tail[0], tail[1]];
             this.body.unshift(tailCopy);
             score.value++;
 
@@ -118,21 +118,18 @@ Snake.prototype = {
 };
 
 /** Functions */
-function report_globals () {
-    alert("Canvas reports...\n\n" +
-          "Width: " + GAME_WIDTH + "\n" +
-          "Height: " + GAME_HEIGHT + "\n" +
-          "Cells wide:" + CELLS_WIDE + "\n" +
-          "Cells high:" + CELLS_HIGH + "\n");
-    //" :" + + "\n" +
-};
+function coords_eq(coord1, coord2) {
+
+}
 
 function process_inputs(e) {
-    switch (e.keyCode) {
-        case 38: if (player.dir != "down")  player.nextDir = "up";    break;
-        case 37: if (player.dir != "right") player.nextDir = "left";  break;
-        case 40: if (player.dir != "up")    player.nextDir = "down";  break;
-        case 39: if (player.dir != "left")  player.nextDir = "right"; break;
+    if (player.dead != true) {
+        switch (e.keyCode) {
+            case 38: if (player.dir != "down")  player.nextDir = "up";    break;
+            case 37: if (player.dir != "right") player.nextDir = "left";  break;
+            case 40: if (player.dir != "up")    player.nextDir = "down";  break;
+            case 39: if (player.dir != "left")  player.nextDir = "right"; break;
+        }
     }
 }
 
@@ -146,13 +143,16 @@ function generate_apple() {
     apple = [Math.floor(Math.random() * CELLS_WIDE),
              Math.floor(Math.random() * CELLS_HIGH)];
     for (var i = 0; i < gameEntities.length; i++)
+    {
         if (gameEntities[i].overlaps(apple))
         {
             apple = [Math.floor(Math.random() * CELLS_WIDE),
                      Math.floor(Math.random() * CELLS_HIGH)];
             i = 0;
         }
+    }
     paint_apple();
+
 }
 
 function paint_apple() {
@@ -198,8 +198,8 @@ function loop(cur) {
         setTimeout(function() {
             loop();
             document.forms[0].reset();
-        }, 5000);
-        
+        }, 2000);
+
     }
 }
 
